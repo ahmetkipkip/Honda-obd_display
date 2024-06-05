@@ -16,7 +16,6 @@ BluetoothSerial SerialBT;
 #define ELM_PORT SerialBT
 #define DEBUG_PORT Serial
 
-
 ELM327 myELM327;
 
 // OBD-II Adapter MAC Address
@@ -71,7 +70,8 @@ void espDelay(int ms)
 void showVoltage()
 {
     static uint64_t timeStamp = 0;
-    if (millis() - timeStamp > 1000) {
+    if (millis() - timeStamp > 1000)
+    {
         timeStamp = millis();
         uint16_t v = analogRead(ADC_PIN);
         float battery_voltage = ((float)v / 4095.0) * 2.0 * 3.3 * (vref / 1000.0);
@@ -79,13 +79,14 @@ void showVoltage()
         Serial.println(voltage);
         tft.fillScreen(TFT_BLACK);
         tft.setTextDatum(MC_DATUM);
-        tft.drawString(voltage,  tft.width() / 2, tft.height() / 2 );
+        tft.drawString(voltage, tft.width() / 2, tft.height() / 2);
     }
 }
 
 void button_init()
 {
-    btn1.setLongClickHandler([](Button2 & b) {
+    btn1.setLongClickHandler([](Button2 &b)
+                             {
         btnCick = false;
         int r = digitalRead(TFT_BL);
         tft.fillScreen(TFT_BLACK);
@@ -106,17 +107,16 @@ void button_init()
         delay(500); 
         esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 0);
         delay(200);
-        esp_deep_sleep_start();
-    });
-    btn1.setPressedHandler([](Button2 & b) {
+        esp_deep_sleep_start(); });
+    btn1.setPressedHandler([](Button2 &b)
+                           {
         Serial.println("Detect Voltage..");
-        btnCick = true;
-    });
+        btnCick = true; });
 
-    btn2.setPressedHandler([](Button2 & b) {
+    btn2.setPressedHandler([](Button2 &b)
+                           {
         btnCick = false;
-        Serial.println("btn press wifi scan");
-    });
+        Serial.println("btn press wifi scan"); });
 }
 
 void button_loop()
@@ -238,18 +238,22 @@ void setup()
 {
     pinMode(ADC_EN, OUTPUT);
     digitalWrite(ADC_EN, HIGH);
-    
 
     Serial.begin(115200);
     button_init();
     esp_adc_cal_characteristics_t adc_chars;
-    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);    //Check type of calibration value used to characterize ADC
-    if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars); // Check type of calibration value used to characterize ADC
+    if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF)
+    {
         Serial.printf("eFuse Vref:%u mV", adc_chars.vref);
         vref = adc_chars.vref;
-    } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
+    }
+    else if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP)
+    {
         Serial.printf("Two Point --> coeff_a:%umV coeff_b:%umV\n", adc_chars.coeff_a, adc_chars.coeff_b);
-    } else {
+    }
+    else
+    {
         Serial.println("Default Vref: 1100mV");
     }
 
@@ -315,7 +319,8 @@ int pwm = 255;
 
 void loop()
 {
-    if (btnCick) {
+    if (btnCick)
+    {
         showVoltage();
     }
     button_loop();
@@ -338,45 +343,42 @@ void loop()
     float voltage = myELM327.batteryVoltage();
     while (myELM327.nb_rx_state == ELM_GETTING_MSG)
         ;
+    DrawBar(tft, voltage, 9, 15, "BATTERY", RangeColors, 0, 4, 1);
 
     float rpm = myELM327.rpm();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
         ;
-    float speed = myELM327.kph();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float throttle = myELM327.throttle();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float coolant = myELM327.engineCoolantTemp();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float oil = myELM327.oilTemp();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float air = myELM327.intakeAirTemp();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float fuel = myELM327.fuelLevel();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float stft = myELM327.shortTermFuelTrimBank_1();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-    float ltft = myELM327.longTermFuelTrimBank_1();
-        while (myELM327.nb_rx_state == ELM_GETTING_MSG)
-        ;
-
-
-    DrawBar(tft, coolant, 20, 120, "COOLANT", RangeColors, 0, 0);
-    DrawBar(tft, oil, 20, 120, "OIL TEMP", RangeColors, 0, 1);
-    DrawBar(tft, air, 10, 60, "AIR INTAKE", RangeColors, 0, 2);
-    DrawBar(tft, throttle, 0, 100, "THROTTLE", RangeColors, 0, 3);
-    DrawBar(tft, voltage, 9, 15, "BATTERY", RangeColors, 0, 4, 1);
     DrawBar(tft, rpm, 0, 11000, "RPM", RangeColorsRPM, 1, 0);
+    float speed = myELM327.kph();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
     DrawBar(tft, speed, 0, 300, "SPEED", RangeColorsSpeed, 1, 1);
+    float throttle = myELM327.throttle();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
+    DrawBar(tft, throttle, 0, 100, "THROTTLE", RangeColors, 0, 3);
+    float coolant = myELM327.engineCoolantTemp();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
+    DrawBar(tft, coolant, 20, 120, "COOLANT", RangeColors, 0, 0);
+    float oil = myELM327.oilTemp();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
+    DrawBar(tft, oil, 20, 120, "OIL TEMP", RangeColors, 0, 1);
+    float air = myELM327.intakeAirTemp();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
+    DrawBar(tft, air, 10, 60, "AIR INTAKE", RangeColors, 0, 2);
+    float fuel = myELM327.fuelLevel();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
     DrawBar(tft, fuel, 0, 100, "FUEL", RangeColorsFuel, 1, 2);
+    float stft = myELM327.shortTermFuelTrimBank_1();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
     DrawBar(tft, stft, -20, 20, "STFT", RangeColorsFuelTrim, 1, 3, 1);
+    float ltft = myELM327.longTermFuelTrimBank_1();
+    while (myELM327.nb_rx_state == ELM_GETTING_MSG)
+        ;
     DrawBar(tft, ltft, -20, 20, "LTFT", RangeColorsFuelTrim, 1, 4, 1);
-    delay(1000);
 }
